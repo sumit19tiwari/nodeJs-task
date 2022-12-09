@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { Request, Response, NextFunction } from 'express';
+import {IStockInfo, ITransactionInfo, ETransactionType} from '../resources';
 
 export const getStock = async (req: Request, res: Response, next: NextFunction) => {
     const sku = req.params?.sku;
@@ -15,10 +16,10 @@ export const getStock = async (req: Request, res: Response, next: NextFunction) 
     const createTransactionRead = fs.createReadStream("transactions.json");
     return new Promise((resolve, reject) =>{
         var quantity = {};
-        createStockRead.on('data',(data)=>{
+        createStockRead.on('data',(data: IStockInfo)=>{
             var stockdata = data.toString();
-            createTransactionRead.on('data',(transdata: any)=>{
-            var transdata =  transdata.toString();
+            createTransactionRead.on('data',(transactiondata: ITransactionInfo[])=>{
+            var transdata =  transactiondata.toString();
             quantity = calculateCurrentStock(sku, JSON.parse(stockdata), JSON.parse(transdata));
             resolve(quantity);
            
@@ -28,13 +29,13 @@ export const getStock = async (req: Request, res: Response, next: NextFunction) 
  }
 
  //Logic to create current quantity
- const calculateCurrentStock = function (sku: string, stockdata: Record<string, any>, transdata: Record<string, any>){
+ const calculateCurrentStock = function (sku: string, stockdata: IStockInfo[], transdata: ITransactionInfo[]){
     const stock = stockdata.find((x: any) => x.sku == sku);
     const transaction = transdata.filter((x: any) => x.sku == sku);
     let currentStock: number = 0;
     if(stock){
         for(var i =0; i< transaction.length; i++){
-            if(transaction[i].type == 'order'){
+            if(transaction[i].type == ETransactionType.ORDER){
                 currentStock = Number(currentStock) - Number(transaction[i].qty);
             } else {
                 currentStock = Number(currentStock) + Number(transaction[i].qty);
