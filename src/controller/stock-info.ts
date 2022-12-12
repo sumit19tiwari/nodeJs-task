@@ -53,4 +53,4 @@ export const getStock = async (req: Request, res: Response, next: NextFunction) 
     }
  }
 
- export default { getStock };
+ export default { getStock, getCurrentStock };
